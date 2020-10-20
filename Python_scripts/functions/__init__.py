@@ -1,2 +1,2 @@
 from .functions_utils import *
-from .whitening.whitening_transform import *
+from .whitening import whitening_transform
