@@ -1,4 +1,4 @@
-
+import numpy as np
 
 class whitening_transform:
 
@@ -43,3 +43,9 @@ class whitening_transform:
             whitened = np.dot((self.X - self.X.mean()), W_matrix)
     
         return whitened
+
+
+    if __name__ == '__main__':
+
+
+        main()

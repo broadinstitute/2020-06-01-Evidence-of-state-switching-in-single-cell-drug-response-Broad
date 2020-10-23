@@ -180,6 +180,11 @@ def whiten(X, method):
     return whitened
 
 
+if __name__ == '__main__':
+    
+    main()
+
+
 
         
 
