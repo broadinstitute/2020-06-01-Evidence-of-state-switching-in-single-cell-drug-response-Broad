@@ -10,8 +10,7 @@ import pathlib
 import numpy as np
 import pandas as pd
 
-from pycytominer import normalize
-from pycytominer import feature_select
+from pycytominer import normalize, feature_select, aggregate
 from pycytominer.cyto_utils import infer_cp_features
 
 
@@ -30,6 +29,7 @@ feature_select_ops = [
 ]
 
 feature_select_summary_file = pathlib.Path("tables/feature_select_summary.csv")
+aggregate_full_file = pathlib.Path(f"{data_dir}/dmso_aggregate_all_plates.csv")
 
 
 # In[3]:
@@ -45,6 +45,7 @@ data_files
 
 
 features_selected_list = []
+aggregated_list = []
 for file in data_files:
     plate = str(file).split("/")[-1].split("_")[0]
     
@@ -80,15 +81,38 @@ for file in data_files:
     selected_features = selected_features.astype(int)
     
     features_selected_list.append(selected_features)
+    
+    # Aggregate the normalized single cell files
+    aggregate_df = aggregate(
+        population_df=df,
+        strata=["Image_Metadata_Well", "Metadata_Plate"],
+        features=feature_cols,
+        operation="median"
+    )
+    
+    aggregated_list.append(aggregate_df)
 
 
 # In[5]:
 
 
+# Track features that were selected
 feature_select_summary_df = pd.concat(features_selected_list, axis="columns")
 
 feature_select_summary_df.to_csv(feature_select_summary_file, sep=",", index=True)
 
 print(feature_select_summary_df.shape)
 feature_select_summary_df.head()
+
+
+# In[6]:
+
+
+# Output the aggregate profiles
+aggregate_full_df = pd.concat(aggregated_list, axis="rows")
+
+aggregate_full_df.to_csv(aggregate_full_file, sep=",", index=False)
+
+print(aggregate_full_df.shape)
+aggregate_full_df.head()
 
