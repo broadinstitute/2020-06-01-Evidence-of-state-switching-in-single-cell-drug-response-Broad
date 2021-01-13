@@ -1,0 +1,138 @@
+import numpy as np
+import pandas as pd
+import os
+import skimage.io
+import matplotlib.pyplot as plt
+
+
+def bounding_box(x, y):
+    
+    
+#     minor_radius = round(minor_axis/2, 3) * 3
+#     major_radius = round(major_axis/2, 3) * 3
+    
+    minor_radius = 30
+    major_radius = 30
+    
+    xmin = x - minor_radius
+    xmax = x + minor_radius
+    ymin = y - major_radius
+    ymax = y + major_radius
+
+
+    width, height = xmax - xmin, ymax - ymin
+    
+    return int(ymin), int(ymax), int(xmin), int(xmax)
+
+
+
+def plotting_cropped_image_2(imagelist, labels, boundingbox):
+    
+    '''imagelist: should be list of image path, 
+      labels: list of channels,
+     boundingbox: Calculated in a function required to crop images
+     image_cropping: dimesion used [ymin:ymax, xmin, xmax ]'''
+       
+
+    fig = plt.figure(figsize=(15,15))
+
+
+    for i, im, lab in zip(range(1,6), imagelist, labels):
+        
+    
+        image = skimage.io.imread(im)
+
+        cropped = image[bbox[0]: bbox[1], bbox[2]: bbox[3]]
+        
+    
+#     # cropping [ymin : ymax, xmin:xmax]
+        ax = fig.add_subplot(1,5,i)
+        ax.imshow(cropped, cmap='gray')
+        ax.set_title(lab)
+        plt.gca().xaxis.set_major_locator(plt.NullLocator())
+        plt.gca().yaxis.set_major_locator(plt.NullLocator())
+        
+        
+        #plt.savefig(os.path.join(outpath, 'weired_datapoint'))
+    
+    return ax
+
+
+   def plotting_composite_image(dtt):
+    
+    for i, cpname, w, s, lx, ly, lb in zip(range(len(dtt)),
+                                    dtt["Metadata_broad_sample"], 
+                                    dtt['Metadata_Well'], 
+                                    dtt['Metadata_Site'],
+                                    dtt['Cells_Location_Center_X'], 
+                                    dtt['Cells_Location_Center_Y'],
+                                    dtt['labels']):
+
+
+
+
+
+        tmp = (dtt[(dtt["Metadata_broad_sample"] == str(cpname)) &
+            (dtt['Cells_Location_Center_X'] == lx) 
+            & (dtt['Cells_Location_Center_Y'] == ly) 
+            & (dtt['Metadata_Well'] == str(w))
+           & (dtt['Metadata_Site'] == s)
+            & (dtt['labels'] == lb)]
+               .reset_index()
+              )
+
+        imagelist = tmp.loc[:, ['FileName_OrigDNA', 
+                            "FileName_OrigRNA", 
+                            "FileName_OrigMito", 
+                            "FileName_OrigAGP",
+                            "FileName_OrigER"]].values.tolist()[0]
+
+        input_dir = tmp['PathName_OrigDNA'][0]
+
+
+        imlist = sorted([os.path.join(input_dir, img) for img in imagelist])
+
+
+
+        labels = ['Ch1: DNA', 'Ch2: ER', 'Ch3: RNA', 'Ch4: AGP', 'Ch5: Mito']
+    
+        bbox = bounding_box(lx, ly)
+        #bbox = (836, 936, 234, 334)
+
+
+        im1 = skimage.io.imread(imlist[0])
+        im2 = skimage.io.imread(imlist[1])
+        im3 = skimage.io.imread(imlist[4])
+
+
+        image4 = np.expand_dims(im1, axis=2)
+
+        image5 = np.expand_dims(im2, axis=2)
+
+        image6 = np.expand_dims(im3, axis=2)
+
+        im_composite = np.concatenate([image4, image5, image6], axis=2)
+
+        cropped = im_composite[bbox[0]: bbox[1], bbox[2]: bbox[3]]
+
+        outpath = '/home/jupyter-habbasi@broadinsti-9d34d/Hamdah_scripts/composite/'
+
+        filename = "{}_{}.png".format(str(i), str(lb))
+
+        skimage.io.imsave(outpath+filename ,cropped)
+        
+    
+    return
+    
+    
+        
+        
+      
+
+plotting_composite_image(dtt) 
+    
+
+
+
+
+
